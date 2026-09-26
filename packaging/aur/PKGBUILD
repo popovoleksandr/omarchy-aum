@@ -9,7 +9,7 @@ license=(MIT)
 depends=(bash imagemagick jq)
 install=omarchy-aum-logo.install
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('7768191f7e290d33ab954263f492843f247607908dabc689c497dd187e0f5769')
 
 package() {
   cd "$pkgname-$pkgver"

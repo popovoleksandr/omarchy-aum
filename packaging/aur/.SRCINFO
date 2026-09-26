@@ -1,6 +1,6 @@
 pkgbase = omarchy-aum-logo
 	pkgdesc = Custom Omarchy logo (ॐarchy, ॐkārchy, oṃarchy, oṃkārchy or your own) for the screensaver, boot/login screens and Omarchy terminal
-	pkgver = 1.0.0
+	pkgver = 1.0.1
 	pkgrel = 1
 	url = https://github.com/popovoleksandr/omarchy-aum-logo
 	install = omarchy-aum-logo.install
@@ -9,7 +9,7 @@ pkgbase = omarchy-aum-logo
 	depends = bash
 	depends = imagemagick
 	depends = jq
-	source = omarchy-aum-logo-1.0.0.tar.gz::https://github.com/popovoleksandr/omarchy-aum-logo/archive/refs/tags/v1.0.0.tar.gz
-	sha256sums = 7768191f7e290d33ab954263f492843f247607908dabc689c497dd187e0f5769
+	source = omarchy-aum-logo-1.0.1.tar.gz::https://github.com/popovoleksandr/omarchy-aum-logo/archive/refs/tags/v1.0.1.tar.gz
+	sha256sums = SKIP
 
 pkgname = omarchy-aum-logo

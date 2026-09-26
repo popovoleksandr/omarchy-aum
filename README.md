@@ -73,9 +73,9 @@ Everything is per user, and no Omarchy files are edited. The login logo goes in 
 The AUR package isn't published yet, because new AUR account registration is paused (as of 2026-09-26). Until then, install the package attached to the [latest release](https://github.com/popovoleksandr/omarchy-aum-logo/releases/latest):
 
 ```sh
-curl -LO https://github.com/popovoleksandr/omarchy-aum-logo/releases/download/v1.0.0/omarchy-aum-logo-1.0.0-1-any.pkg.tar.zst
-sha256sum omarchy-aum-logo-1.0.0-1-any.pkg.tar.zst    # compare with the release notes
-sudo pacman -U omarchy-aum-logo-1.0.0-1-any.pkg.tar.zst
+curl -LO https://github.com/popovoleksandr/omarchy-aum-logo/releases/download/v1.0.1/omarchy-aum-logo-1.0.1-1-any.pkg.tar.zst
+sha256sum omarchy-aum-logo-1.0.1-1-any.pkg.tar.zst    # compare with the release notes
+sudo pacman -U omarchy-aum-logo-1.0.1-1-any.pkg.tar.zst
 ```
 
 Download it first: `pacman -U` with a link wants a signature file (`.sig`) next to the package, and the release has none, so it fails with a 404. Local files don't need one on a default Arch setup.

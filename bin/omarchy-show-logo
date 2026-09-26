@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# omarchy-aum: user override of omarchy-show-logo, which the floating Omarchy
+# terminal runs before a command. Shows the custom logo from the screensaver
+# branding instead of the stock $OMARCHY_PATH/logo.txt.
+
+logo=~/.config/omarchy/branding/screensaver.txt
+[[ -s $logo ]] || logo=${OMARCHY_PATH:-/usr/share/omarchy}/logo.txt
+
+clear
+echo -e "\033[32m"
+cat <"$logo"
+echo -e "\033[0m"
+echo

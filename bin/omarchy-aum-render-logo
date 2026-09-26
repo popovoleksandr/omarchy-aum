@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# Renders a block-character ASCII logo (█ ▀ ▄) into the PNG used by the Plymouth
+# unlock screen and the SDDM login screen.
+#
+# Usage: omarchy-aum-render-logo <logo.txt> <output.png>
+#
+# Omarchy's stock logo.png is its logo.txt drawn at 10 px per column and per
+# half-row (81x19 half-cells) and then resized to 800x188. Rendering the same
+# way keeps a custom logo at the stock size and look.
+
+set -euo pipefail
+
+if (($# != 2)); then
+  echo "Usage: omarchy-aum-render-logo <logo.txt> <output.png>" >&2
+  exit 1
+fi
+
+src=$1
+out=$2
+color=${LOGO_COLOR:-#a8cd76}
+
+[[ -s $src ]] || { echo "error: $src is missing or empty" >&2; exit 1; }
+command -v magick >/dev/null || { echo "error: magick is missing (package: imagemagick)" >&2; exit 1; }
+
+# Index the block characters per character, not per byte.
+export LC_ALL=C.UTF-8
+
+mapfile -t lines <"$src"
+
+cols=0
+for line in "${lines[@]}"; do
+  ((${#line} > cols)) && cols=${#line}
+done
+
+# Every text line is two half-rows: its top half and its bottom half.
+rows=()
+for line in "${lines[@]}"; do
+  top= bottom=
+  for ((i = 0; i < cols; i++)); do
+    ch=${line:i:1}
+    case $ch in
+    █) top+=1 bottom+=1 ;;
+    ▀) top+=1 bottom+=0 ;;
+    ▄) top+=0 bottom+=1 ;;
+    *) top+=0 bottom+=0 ;;
+    esac
+  done
+  rows+=("$top" "$bottom")
+done
+
+# Drop empty half-rows above and below the artwork.
+empty=$(printf '0%.0s' $(seq "$cols"))
+while ((${#rows[@]})) && [[ ${rows[0]} == "$empty" ]]; do rows=("${rows[@]:1}"); done
+while ((${#rows[@]})) && [[ ${rows[-1]} == "$empty" ]]; do unset 'rows[-1]'; done
+((${#rows[@]})) || { echo "error: $src has no block characters (█ ▀ ▄)" >&2; exit 1; }
+
+width=$(((cols * 8000 + 405) / 810))
+height=$(((${#rows[@]} * 1880 + 95) / 190))
+
+tmp=$(mktemp --suffix=.pbm)
+trap 'rm -f "$tmp"' EXIT
+{
+  echo P1
+  echo "$cols ${#rows[@]}"
+  printf '%s\n' "${rows[@]}"
+} >"$tmp"
+
+mkdir -p "$(dirname "$out")"
+# Scale the grid up 10x (pixel replication), use it as the alpha of a solid
+# color, then resize with anti-aliasing like the stock image.
+magick -size "$((cols * 10))x$((${#rows[@]} * 10))" "xc:$color" \
+  \( "$tmp" -scale 1000% -negate \) -alpha off -compose CopyOpacity -composite \
+  -resize "${width}x${height}!" -strip "PNG32:$out"

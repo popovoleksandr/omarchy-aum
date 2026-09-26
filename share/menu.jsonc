@@ -1,13 +1,17 @@
 // >>> omarchy-aum-logo >>>
 // Style > Logo, added by omarchy-aum-logo. `omarchy-aum-logo unsetup` removes it.
-"style.logo": {"icon":"󰥶","label":"Logo","aliases":["logo","aum"],"description":"ॐarchy, oṃarchy or your own","when":"command -v @CMD@ >/dev/null"},
+"style.logo": {"icon":"󰥶","label":"Logo","aliases":["logo","aum"],"description":"ॐarchy, ॐkārchy, oṃarchy, oṃkārchy or your own","when":"command -v @CMD@ >/dev/null"},
 "style.logo.aum": {"icon":"󰥳","label":"ॐarchy","checked":"@CMD@ is-active aum","action":"omarchy-launch-floating-terminal-with-presentation '@CMD@ set aum'"},
+"style.logo.aumkar": {"icon":"󰥳","label":"ॐkārchy","checked":"@CMD@ is-active aumkar","action":"omarchy-launch-floating-terminal-with-presentation '@CMD@ set aumkar'"},
 "style.logo.om": {"icon":"","label":"oṃarchy","checked":"@CMD@ is-active om","action":"omarchy-launch-floating-terminal-with-presentation '@CMD@ set om'"},
+"style.logo.omkar": {"icon":"","label":"oṃkārchy","checked":"@CMD@ is-active omkar","action":"omarchy-launch-floating-terminal-with-presentation '@CMD@ set omkar'"},
 "style.logo.custom": {"icon":"","label":"Custom","when":"@CMD@ has custom","checked":"@CMD@ is-active custom","action":"omarchy-launch-floating-terminal-with-presentation '@CMD@ set custom'"},
 "style.logo.edit": {"icon":"","label":"Edit Custom Text","action":"@CMD@ edit"},
 "style.logo.preview": {"icon":"","label":"Preview"},
 "style.logo.preview.aum": {"icon":"󰥳","label":"ॐarchy","action":"@CMD@ preview aum"},
+"style.logo.preview.aumkar": {"icon":"󰥳","label":"ॐkārchy","action":"@CMD@ preview aumkar"},
 "style.logo.preview.om": {"icon":"","label":"oṃarchy","action":"@CMD@ preview om"},
+"style.logo.preview.omkar": {"icon":"","label":"oṃkārchy","action":"@CMD@ preview omkar"},
 "style.logo.preview.custom": {"icon":"","label":"Custom","when":"@CMD@ has custom","action":"@CMD@ preview custom"},
 "style.logo.status": {"icon":"","label":"Status","action":"omarchy-launch-floating-terminal-with-presentation '@CMD@ status'"},
 "style.logo.default": {"icon":"","label":"Restore Default","action":"omarchy-launch-floating-terminal-with-presentation '@CMD@ reset'"},

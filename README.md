@@ -19,6 +19,8 @@ You pick the logo from **Style > Logo** in the Omarchy menu, or with the `omarch
       ▀██████▀               ███   █▀   ███   ███  ███████▀   ███   █▀    ▀█████▀
                                         ███   █▀
   ```
+- **`om`**: oṃarchy. The stock logo with a stub on top of the "O" and a dot below the "m" (anusvara, as in *oṃ*):
+  ```
      ▄▄▄
    ▄█████▄    ▄███████████▄    ▄███████   ▄███████   ▄███████   ▄█   █▄    ▄█   █▄
   ███   ███  ███   ███   ███  ███   ███  ███   ███  ███   ███  ███   ███  ███   ███
@@ -29,6 +31,36 @@ You pick the logo from **Style > Logo** in the Omarchy menu, or with the `omarch
   ███   ███  ███   ███   ███  ███   ███  ███   ███  ███   ███  ███   ███  ███   ███
    ▀█████▀    ▀█   ███   █▀   ███   █▀   ███   ███  ███████▀   ███   █▀    ▀█████▀
                                          ███   █▀
+                   ███
+  ```
+- **`aumkar`**: ॐkārchy. ॐ followed by a "k" drawn in the letters' style and an "ā" (a macron over the "a"), as in *oṃkāra*:
+  ```
+             ▄  ▄██▄
+             ▀█▄ ▀▀  ▄▄██                ███████
+      ▄▄▄███▄▄ ▀▀█████▀▀
+     █████▀▀██▄     ▄▄▄▄      ▄█    ▄█   ▄███████   ▄███████   ▄███████   ▄█   █▄    ▄█   █▄
+      ▀      ██  ▄████▀▀██   ███  ▄██▀  ███   ███  ███   ███  ███   ███  ███   ███  ███   ███
+        ▄▄███▀  ▄███▀    ██  ███▄██▀    ███   ███  ███   ███  ███   █▀   ███   ███  ███   ███
+  ▄     ▀████▄▄███▀      ██  █████▄▄▄  ▄███▄▄▄███ ▄███▄▄▄██▀  ███       ▄███▄▄▄███▄ ███▄▄▄███
+  █▄         ██▄ ▄      ▄██ ▀███▀███   ▀███▀▀▀███ ▀███▀▀▀▀    ███      ▀▀███▀▀▀███  ▀▀▀▀▀▀███
+  ▀█▄        ███ ▀█▄▄▄████▀  ███  ███   ███   ███ ██████████  ███   █▄   ███   ███  ▄██   ███
+    ▀██▄▄▄▄▄███▀  ▀██████    ███   ███  ███   ███  ███   ███  ███   ███  ███   ███  ███   ███
+      ▀██████▀               ███   █▀   ███   █▀   ███   ███  ███████▀   ███   █▀    ▀█████▀
+                                                   ███   █▀
+  ```
+- **`omkar`**: oṃkārchy. oṃarchy with the same "k" and "ā":
+  ```
+                                          ███████
+     ▄▄▄
+   ▄█████▄    ▄███████████▄    ▄█    ▄█   ▄███████   ▄███████   ▄███████   ▄█   █▄    ▄█   █▄
+  ███   ███  ███   ███   ███  ███  ▄██▀  ███   ███  ███   ███  ███   ███  ███   ███  ███   ███
+  ███   ███  ███   ███   ███  ███▄██▀    ███   ███  ███   ███  ███   █▀   ███   ███  ███   ███
+  ███   ███  ███   ███   ███  █████▄▄▄  ▄███▄▄▄███ ▄███▄▄▄██▀  ███       ▄███▄▄▄███▄ ███▄▄▄███
+  ███   ███  ███   ███   ███ ▀███▀███   ▀███▀▀▀███ ▀███▀▀▀▀    ███      ▀▀███▀▀▀███  ▀▀▀▀▀▀███
+  ███   ███  ███   ███   ███  ███  ███   ███   ███ ██████████  ███   █▄   ███   ███  ▄██   ███
+  ███   ███  ███   ███   ███  ███   ███  ███   ███  ███   ███  ███   ███  ███   ███  ███   ███
+   ▀█████▀    ▀█   ███   █▀   ███   █▀   ███   █▀   ███   ███  ███████▀   ███   █▀    ▀█████▀
+                                                    ███   █▀
                    ███
   ```
 
@@ -67,7 +99,7 @@ pacman sees the AUR package as the same package, so a copy installed from the re
 Then:
 
 1. Open **Omarchy Aum Logo** from the app launcher (it has an ॐ icon). The first time, it adds **Style > Logo** to the Omarchy menu and opens it.
-2. Pick **ॐarchy** or **oṃarchy**. A floating terminal asks for your sudo password once, to put the logo on the boot and login screens, and rebuilds the initramfs.
+2. Pick **ॐarchy**, **ॐkārchy**, **oṃarchy** or **oṃkārchy**. A floating terminal asks for your sudo password once, to put the logo on the boot and login screens, and rebuilds the initramfs.
 3. **Log out and back in** once after installing the package, so the floating Omarchy terminal can show the logo. **Reboot** to see it on the boot/unlock screen.
 
 ### From a checkout
@@ -93,10 +125,10 @@ LOGO=om ./install.sh      # or oṃarchy
 
 | Row | What it does |
 |---|---|
-| ॐarchy, oṃarchy | Shows that logo everywhere. The active one has a ✓. Opens a floating terminal, because the login screens need sudo. |
+| ॐarchy, ॐkārchy, oṃarchy, oṃkārchy | Shows that logo everywhere. The active one has a ✓. Opens a floating terminal, because the login screens need sudo. |
 | Custom | Shows your own logo. Appears once you've used Edit Custom Text. |
 | Edit Custom Text | Opens `~/.config/omarchy-aum-logo/logos/custom.txt` in your editor. The first time, it starts as a copy of the active logo. Pick **Custom** afterwards to use it. |
-| Preview ▸ | Opens a picture of the unlock screen with ॐarchy, oṃarchy or Custom, without changing anything |
+| Preview ▸ | Opens a picture of the unlock screen with any of the logos or Custom, without changing anything |
 | Status | Checks every place, in a floating terminal |
 | Restore Default | Puts the stock Omarchy logo back everywhere. The Logo menu stays so you can pick again. |
 
@@ -122,7 +154,7 @@ A `<logo>` is a name from `omarchy-aum-logo list` or a path to a `.txt` file. Yo
 
 ## Your own logo
 
-Any `~/.config/omarchy-aum-logo/logos/<name>.txt` becomes a logo named `<name>`. A file there with the same name as a bundled logo (`aum`, `om`) replaces it. **Edit Custom Text** uses `custom.txt`.
+Any `~/.config/omarchy-aum-logo/logos/<name>.txt` becomes a logo named `<name>`. A file there with the same name as a bundled logo (`aum`, `aumkar`, `om`, `omkar`) replaces it. **Edit Custom Text** uses `custom.txt`.
 
 - Use only `█`, `▀`, `▄` and spaces. Each character is one column; each line is two pixel rows (`▀` top half, `▄` bottom half). The letters are 16 pixel rows (8 lines) tall.
 - `omarchy-aum-logo preview <name>` shows it before you use it.
@@ -153,7 +185,7 @@ If the package is already gone, `omarchy plymouth reset` and `omarchy branding s
 
 ### Login logo
 
-Omarchy's stock `logo.png` (800×188) is its `logo.txt` drawn at 10 px per column and per half-row (81 columns × 19 half-rows = 810×190), then resized to 800×188. `lib/render-logo` does the same with ImageMagick. Rendering the stock `logo.txt` this way reproduces the stock image: no pixel's opacity differs by more than half. So a custom logo keeps the stock scale and style. The image size follows the art: `om` is 800×208 because of the stub above the "O" and the dot below the "m", and `aum` is 790×237 because of the crescent and dot above ॐ.
+Omarchy's stock `logo.png` (800×188) is its `logo.txt` drawn at 10 px per column and per half-row (81 columns × 19 half-rows = 810×190), then resized to 800×188. `lib/render-logo` does the same with ImageMagick. Rendering the stock `logo.txt` this way reproduces the stock image: no pixel's opacity differs by more than half. So a custom logo keeps the stock scale and style. The image size follows the art: `om` is 800×208 because of the stub above the "O" and the dot below the "m", `aum` is 790×237 because of the crescent and dot above ॐ, and the "k" and the macron over the "a" make `aumkar` 899×237 and `omkar` 909×237. The floating Omarchy terminal (875×600 px, about 117 columns with the default font) fits all of them.
 
 The PNG is installed with `omarchy plymouth set <bg> <text> <logo.png>`. That's the same command Omarchy uses for theme unlock screens. It writes the logo into both the Plymouth and the SDDM theme, sets the colors, and rebuilds the initramfs, because the boot screen loads from there. Both screens center the logo and size it from the image, so a taller logo needs no layout change.
 
@@ -179,7 +211,7 @@ For the terminal to find the override first, its directory has to come before `/
 
 | File | Purpose |
 |---|---|
-| `logos/aum.txt`, `logos/om.txt` | ॐarchy (default) and oṃarchy |
+| `logos/aum.txt`, `logos/aumkar.txt`, `logos/om.txt`, `logos/omkar.txt` | ॐarchy (default), ॐkārchy, oṃarchy and oṃkārchy |
 | `bin/omarchy-aum-logo` | The command; all the logic lives here |
 | `lib/common.sh`, `lib/render-logo` | Shared helpers; the logo-to-PNG renderer |
 | `share/menu.jsonc` | The Style > Logo block (`@CMD@` becomes the command) |

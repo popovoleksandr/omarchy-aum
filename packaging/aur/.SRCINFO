@@ -1,5 +1,5 @@
 pkgbase = omarchy-aum-logo
-	pkgdesc = Custom Omarchy logo (ॐarchy, oṃarchy or your own) for the screensaver, boot/login screens and Omarchy terminal
+	pkgdesc = Custom Omarchy logo (ॐarchy, ॐkārchy, oṃarchy, oṃkārchy or your own) for the screensaver, boot/login screens and Omarchy terminal
 	pkgver = 1.0.0
 	pkgrel = 1
 	url = https://github.com/popovoleksandr/omarchy-aum-logo

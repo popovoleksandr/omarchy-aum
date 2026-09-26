@@ -36,11 +36,33 @@ Everything is per user, and no Omarchy files are edited. The login logo goes in 
 
 ## Install
 
-### From the AUR
+### Package from the GitHub release
+
+The AUR package isn't published yet, because new AUR account registration is paused (as of 2026-09-26). Until then, install the package attached to the [latest release](https://github.com/popovoleksandr/omarchy-aum-logo/releases/latest):
+
+```sh
+curl -LO https://github.com/popovoleksandr/omarchy-aum-logo/releases/download/v1.0.0/omarchy-aum-logo-1.0.0-1-any.pkg.tar.zst
+sha256sum omarchy-aum-logo-1.0.0-1-any.pkg.tar.zst    # compare with the release notes
+sudo pacman -U omarchy-aum-logo-1.0.0-1-any.pkg.tar.zst
+```
+
+Download it first: `pacman -U` with a link wants a signature file (`.sig`) next to the package, and the release has none, so it fails with a 404. Local files don't need one on a default Arch setup.
+
+Or build the same package yourself. makepkg downloads the tagged release from GitHub and checks it against the checksum in the PKGBUILD:
+
+```sh
+git clone https://github.com/popovoleksandr/omarchy-aum-logo.git
+cd omarchy-aum-logo/packaging/aur
+makepkg -si
+```
+
+Once it's on the AUR, installing will be:
 
 ```sh
 omarchy pkg aur add omarchy-aum-logo     # or: yay -S omarchy-aum-logo
 ```
+
+pacman sees the AUR package as the same package, so a copy installed from the release upgrades normally.
 
 Then:
 
@@ -178,7 +200,9 @@ Tested on 2026-09-26 with Omarchy 4.0.4, Hyprland 0.56.2, uwsm 0.26.7, Plymouth 
 - Verified: the menu block was parsed with Omarchy's own `MenuModel.js`. All 11 rows land under Style > Logo with the right parents, and `unsetup` restores the file byte for byte. Adding works for a missing file and for a file with entries of its own. A file without a `{` line is refused and left unchanged.
 - Verified: `makepkg` builds the package, and `desktop-file-validate` accepts the desktop entry. From the unpacked package, `set` uses the bundled logos and removes checkout copies, and the menu rows call `omarchy-aum-logo`.
 - Verified in an empty home folder: `set` (bundled and custom logos), `list`, `current`, `edit` seeding `custom.txt`, `preview`, `status` and `reset`. The terminal override shows the picked logo, and Omarchy's own when none is picked.
-- Not yet verified: the installed package on a live session (app launcher, Style > Logo, ✓ marks), and the floating terminal after a real re-login.
+- Verified live on 2026-09-26 with the installed package: clicking "Omarchy Aum Logo" in the launcher added Style > Logo and opened it. The rows, icons and the ॐ/ṃ labels render in the menu. Picking ॐarchy there put it on the screensaver and both login screens, and `omarchy-aum-logo status` confirmed every place.
+- Verified: the v1.0.0 release package installs with download, `sha256sum` check, then `pacman -U` of the local file, and upgrades a 0.1.0 test build. `pacman -U <link>` fails on a default Arch setup, because remote files need a `.sig`.
+- Not yet verified: the floating terminal after a real re-login, and the ✓ mark on screen (`omarchy-aum-logo is-active aum` succeeds, which is what the menu checks).
 
 ## License
 

@@ -1,6 +1,6 @@
 // >>> omarchy-aum-logo >>>
 // Style > Logo, added by omarchy-aum-logo. `omarchy-aum-logo unsetup` removes it.
-"style.logo": {"icon":"󰥳","label":"Logo","aliases":["logo","aum"],"description":"ॐarchy, oṃarchy or your own","when":"command -v @CMD@ >/dev/null"},
+"style.logo": {"icon":"󰥶","label":"Logo","aliases":["logo","aum"],"description":"ॐarchy, oṃarchy or your own","when":"command -v @CMD@ >/dev/null"},
 "style.logo.aum": {"icon":"󰥳","label":"ॐarchy","checked":"@CMD@ is-active aum","action":"omarchy-launch-floating-terminal-with-presentation '@CMD@ set aum'"},
 "style.logo.om": {"icon":"","label":"oṃarchy","checked":"@CMD@ is-active om","action":"omarchy-launch-floating-terminal-with-presentation '@CMD@ set om'"},
 "style.logo.custom": {"icon":"","label":"Custom","when":"@CMD@ has custom","checked":"@CMD@ is-active custom","action":"omarchy-launch-floating-terminal-with-presentation '@CMD@ set custom'"},

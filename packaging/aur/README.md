@@ -2,20 +2,37 @@
 
 The AUR package builds from a tagged GitHub release: `PKGBUILD` downloads `v<version>.tar.gz` from GitHub and installs it with `make install`.
 
+> **Status (2026-09-26):** not on the AUR yet. New AUR account registration is paused while the AUR deals with automated sign-ups, with no manual queue ([aur-general](https://lists.archlinux.org/mailman3/lists/aur-general.lists.archlinux.org/), [Arch news](https://archlinux.org/news/) announce when it reopens). `v1.0.0` is tagged, its checksum is in `PKGBUILD`, and the built package is attached to the [GitHub release](https://github.com/popovoleksandr/omarchy-aum-logo/releases/tag/v1.0.0). Once you have an account, finish [One-time setup](#one-time-setup) and run `packaging/aur/publish.sh`.
+
 ## One-time setup
 
 1. Create an account at <https://aur.archlinux.org/register>.
-2. Add your SSH public key to the account (**My Account → SSH Public Key**):
+2. Add your SSH public key to the account. Print it:
    ```sh
    cat ~/.ssh/id_ed25519.pub
    ```
-3. Tell SSH to use that key for the AUR, in `~/.ssh/config`:
+   Sign in, open **My Account**, and paste the whole line (from `ssh-ed25519` to the comment at the end) into **SSH Public Key**. Then enter your current AUR password at the bottom of the form and click **Update**. The form doesn't save without the password.
+3. Check it:
+   ```sh
+   ssh aur@aur.archlinux.org help
    ```
-   Host aur.archlinux.org
-     IdentityFile ~/.ssh/id_ed25519
-     User aur
-   ```
-4. Check it: `ssh aur@aur.archlinux.org help` should list the AUR commands.
+   It should list the AUR commands.
+
+   The first connection asks you to confirm the AUR's host key. Answer `yes` only if the fingerprint matches one the AUR publishes at the bottom of <https://aur.archlinux.org>. As of 2026-09-26:
+
+   | Key type | Fingerprint |
+   |---|---|
+   | ED25519 | `SHA256:RFzBCUItH9LZS0cKB5UE6ceAYhBD5C8GeOBip8Z11+4` |
+   | ECDSA | `SHA256:uTa/0PndEgPZTf76e1DFqXKJEXKsn7m9ivhLQtzGOCI` |
+   | RSA | `SHA256:5s5cIyReIfNNVGRFdDbe3hdYiI5OelHGpw2rOUud3Q8` |
+
+SSH offers `~/.ssh/id_ed25519` by default, so no SSH config is needed. If your AUR key lives in another file, tell SSH in `~/.ssh/config`:
+
+```
+Host aur.archlinux.org
+  IdentityFile ~/.ssh/<your-aur-key>
+  User aur
+```
 
 ## Releasing a version
 
@@ -34,8 +51,46 @@ The AUR package builds from a tagged GitHub release: `PKGBUILD` downloads `v<ver
    packaging/aur/publish.sh
    ```
    The first run clones `ssh://aur@aur.archlinux.org/omarchy-aum-logo.git` (empty for a new package) into `~/Projects/aur-omarchy-aum-logo`. Pushing to it creates the package. Later runs push updates.
+5. Attach the built package to the GitHub release, for people installing without the AUR. Build it from the committed PKGBUILD in a scratch folder, so it comes from the GitHub tarball and not your working tree:
+   ```sh
+   dir=$(mktemp -d)
+   git show HEAD:packaging/aur/PKGBUILD >"$dir/PKGBUILD"
+   git show HEAD:packaging/aur/omarchy-aum-logo.install >"$dir/omarchy-aum-logo.install"
+   (cd "$dir" && makepkg -f)
+   gh release create v1.0.0 "$dir"/omarchy-aum-logo-1.0.0-1-any.pkg.tar.zst --verify-tag --title "omarchy-aum-logo 1.0.0" --notes "…"
+   ```
+   Then update the version in the download commands in the main README. Keep the release notes' install steps as download, compare the checksum, then `pacman -U` the local file: `pacman -U <link>` fails because the package isn't GPG-signed.
 
 The package page is then <https://aur.archlinux.org/packages/omarchy-aum-logo>, and anyone can install it with `omarchy pkg aur add omarchy-aum-logo` or `yay -S omarchy-aum-logo`.
+
+Don't move or re-create a tag after publishing it. The checksum in `PKGBUILD` belongs to the tagged commit's tarball, so a moved tag breaks every install with a checksum mismatch. Release a fix as a new version instead.
+
+## Troubleshooting
+
+### `Permission denied (publickey)`
+
+```
+aur@aur.archlinux.org: Permission denied (publickey).
+fatal: Could not read from remote repository.
+```
+
+The AUR didn't accept the key SSH offered. Nothing was cloned or pushed, so after fixing it, just run `publish.sh` again.
+
+1. See which key SSH offers:
+   ```sh
+   ssh -v aur@aur.archlinux.org help 2>&1 | grep "Offering public key"
+   ```
+2. Compare it with your key's fingerprint:
+   ```sh
+   ssh-keygen -lf ~/.ssh/id_ed25519.pub
+   ```
+   - The two match, but it's still refused: the key isn't on your AUR account. Paste it under **My Account → SSH Public Key**, and remember the password field (see [One-time setup](#one-time-setup)).
+   - Nothing is offered, or a different key is: point SSH at the right key in `~/.ssh/config`, as above.
+3. Test again with `ssh aur@aur.archlinux.org help`.
+
+### The AUR doesn't respond
+
+Sometimes the AUR is unreachable for a while, for example during DDoS protection: HTTPS fails with `TLS connect error` and SSH times out. `omarchy pkg aur accessible` reports whether it's back. Wait and try again.
 
 ## Changing only the packaging
 

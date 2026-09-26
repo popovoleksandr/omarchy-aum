@@ -10,6 +10,9 @@ PLYMOUTH_THEME=/usr/share/plymouth/themes/omarchy
 SDDM_THEME=/usr/share/sddm/themes/omarchy
 STOCK_BG="#1a1b26"
 STOCK_TEXT="#c0caf5"
+DEFAULT_LOGO=aum
+# Remembers which logo install.sh installed, for status.sh and uninstall.sh.
+STATE_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy-aum/logo"
 
 warn() {
   echo "warning: $*" >&2
@@ -18,6 +21,26 @@ warn() {
 die() {
   echo "error: $*" >&2
   exit 1
+}
+
+# Path of a logo given by name (logos/<name>.txt) or as a path to a .txt file.
+logo_file() {
+  local logo=$1 names
+  if [[ $logo != */* && -f $ROOT/logos/$logo.txt ]]; then
+    echo "$ROOT/logos/$logo.txt"
+  elif [[ -f $logo ]]; then
+    realpath -- "$logo"
+  else
+    names=$(cd "$ROOT/logos" && ls -- *.txt | sed 's/\.txt$//' | paste -sd, | sed 's/,/, /g')
+    die "no logo \"$logo\": use a name from logos/ ($names) or a path to a .txt file"
+  fi
+}
+
+# The logo install.sh installed last, or the default if it never ran.
+installed_logo() {
+  local logo
+  logo=$(cat "$STATE_FILE" 2>/dev/null)
+  echo "${logo:-$DEFAULT_LOGO}"
 }
 
 # True if two logo PNGs show the same picture. Renders from different

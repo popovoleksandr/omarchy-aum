@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Checks that every place shows the logo from logo.txt.
+# Checks that every place shows the installed logo (or LOGO=<name|file>).
 
 source "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
@@ -8,15 +8,19 @@ bad() { printf '  \e[31mFAIL\e[0m  %s\n' "$*"; }
 note() { printf '  ..    %s\n' "$*"; }
 todo() { printf '  \e[33mtodo\e[0m  %s\n' "$*"; }
 
+LOGO=${LOGO:-$(installed_logo)}
+logo_path=$(logo_file "$LOGO") || exit 1
+echo "Logo \"$LOGO\" ($logo_path)"
+
 rendered=$(mktemp --suffix=.png)
 trap 'rm -f "$rendered"' EXIT
-"$ROOT/bin/omarchy-aum-render-logo" "$ROOT/logo.txt" "$rendered" || exit 1
+"$ROOT/bin/omarchy-aum-render-logo" "$logo_path" "$rendered" || exit 1
 
 echo "Screensaver"
-if cmp -s "$ROOT/logo.txt" "$BRANDING_DIR/screensaver.txt"; then
-  ok "$BRANDING_DIR/screensaver.txt matches logo.txt"
+if cmp -s "$logo_path" "$BRANDING_DIR/screensaver.txt"; then
+  ok "$BRANDING_DIR/screensaver.txt matches the logo"
 elif [[ -f $BRANDING_DIR/screensaver.txt ]]; then
-  bad "$BRANDING_DIR/screensaver.txt differs from logo.txt: copy your edits into logo.txt, or run ./install.sh"
+  bad "$BRANDING_DIR/screensaver.txt differs from the logo: copy your edits into $logo_path, or run ./install.sh"
 else
   bad "$BRANDING_DIR/screensaver.txt is missing: run ./install.sh"
 fi
@@ -24,7 +28,7 @@ fi
 echo "Login screens"
 for logo in "$PLYMOUTH_THEME/logo.png" "$SDDM_THEME/logo.png"; do
   if same_logo "$rendered" "$logo"; then
-    ok "$logo shows logo.txt"
+    ok "$logo shows the logo"
   else
     bad "$logo shows a different logo: run ./install.sh"
   fi

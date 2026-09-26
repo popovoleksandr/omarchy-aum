@@ -2,14 +2,13 @@
 # Previews a logo without installing anything: prints it the way the floating
 # terminal and screensaver show it, and opens a picture of the unlock screen.
 #
-# Usage: ./preview.sh [logo.txt]
+# Usage: ./preview.sh [name|file]   (default: $LOGO, else aum)
 
 set -euo pipefail
 
 source "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
-src=${1:-$ROOT/logo.txt}
-[[ -s $src ]] || die "$src is missing or empty"
+src=$(logo_file "${1:-${LOGO:-$DEFAULT_LOGO}}") || exit 1
 
 echo -e "\033[32m"
 cat <"$src"

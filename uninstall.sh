@@ -8,6 +8,9 @@ set -euo pipefail
 
 source "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
+# The logo install.sh installed, unless LOGO=<name|file> says otherwise.
+LOGO=${LOGO:-$(installed_logo)}
+
 skip_login=false
 case "${1:-}" in
 "") ;;
@@ -26,17 +29,18 @@ for file in "$USER_BIN_DIR/omarchy-show-logo" "$UWSM_ENV_DIR/$UWSM_ENV_FILE"; do
 done
 rmdir "$USER_BIN_DIR" "$UWSM_ENV_DIR" "${UWSM_ENV_DIR%/*}" 2>/dev/null || true
 
+logo_path=$(logo_file "$LOGO") || exit 1
 stock_logo=${OMARCHY_PATH:-/usr/share/omarchy}/logo.txt
-if cmp -s "$ROOT/logo.txt" "$BRANDING_DIR/screensaver.txt"; then
+if cmp -s "$logo_path" "$BRANDING_DIR/screensaver.txt"; then
   cp "$stock_logo" "$BRANDING_DIR/screensaver.txt"
   echo "Reset $BRANDING_DIR/screensaver.txt to the stock logo"
 else
-  echo "Left $BRANDING_DIR/screensaver.txt alone: it isn't logo.txt"
+  echo "Left $BRANDING_DIR/screensaver.txt alone: it isn't the \"$LOGO\" logo"
 fi
 
 rendered=$(mktemp --suffix=.png)
 trap 'rm -f "$rendered"' EXIT
-"$ROOT/bin/omarchy-aum-render-logo" "$ROOT/logo.txt" "$rendered"
+"$ROOT/bin/omarchy-aum-render-logo" "$logo_path" "$rendered"
 if $skip_login; then
   echo "Left the login screens alone (--skip-login)"
 elif same_logo "$rendered" "$PLYMOUTH_THEME/logo.png" || same_logo "$rendered" "$SDDM_THEME/logo.png"; then
@@ -46,7 +50,8 @@ elif same_logo "$rendered" "$PLYMOUTH_THEME/logo.png" || same_logo "$rendered" "
 else
   echo "Left the login screens alone: they don't show this logo"
 fi
-rm -f "$BRANDING_DIR/login.png"
+rm -f "$BRANDING_DIR/login.png" "$STATE_FILE"
+rmdir "$(dirname "$STATE_FILE")" 2>/dev/null || true
 
 echo
 echo "Done. Log out and back in once so the floating terminal drops the override."

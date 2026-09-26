@@ -1,0 +1,360 @@
+#!/usr/bin/env bash
+# omarchy-aum-logo: a custom Omarchy logo on the screensaver, the boot/login screens
+# and the floating Omarchy terminal. Run without arguments for help.
+
+set -euo pipefail
+
+ROOT=$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/.." && pwd)
+source "$ROOT/lib/common.sh"
+
+usage() {
+  cat <<EOF
+Usage: omarchy-aum-logo <command> [args]
+
+  menu              Open Style > Logo in the Omarchy menu (adds it on first use)
+  set <logo>        Show <logo> on the screensaver, login screens and terminal
+  reset             Put the stock Omarchy logo back everywhere
+  edit              Edit your custom logo ($USER_LOGOS_DIR/custom.txt)
+  preview [logo]    Show a logo on a picture of the unlock screen
+  status            Check that every place shows the active logo
+  list              List the logos you can use
+  current           Print the active logo
+  setup             Add Style > Logo to the Omarchy menu
+  unsetup           Remove Style > Logo from the Omarchy menu
+
+set and reset take --skip-login to leave the login screens alone (the only
+step that needs sudo). A <logo> is a name from \`omarchy-aum-logo list\` or a path
+to a .txt file of block characters (█ ▀ ▄).
+EOF
+}
+
+require_omarchy() {
+  command -v omarchy >/dev/null || die "omarchy is missing; this is meant for Omarchy"
+  command -v magick >/dev/null || die "magick is missing (package: imagemagick)"
+  [[ -d $PLYMOUTH_THEME && -d $SDDM_THEME ]] ||
+    die "the Omarchy Plymouth/SDDM themes are missing ($PLYMOUTH_THEME, $SDDM_THEME)"
+}
+
+# A checkout puts the floating-terminal override and its env file in your home;
+# the package ships them system-wide, so it removes checkout copies instead.
+install_terminal_override() {
+  if $PACKAGED; then
+    remove_checkout_files
+    return
+  fi
+  echo "Installing the floating terminal logo to $OVERRIDE_BIN"
+  # The first version's env file put the same directory on PATH under another name.
+  local legacy="$HOME/.config/uwsm/env.d/50-omarchy-user-bin"
+  if grep -qs omarchy-aum "$legacy"; then
+    rm -f "$legacy"
+    echo "Removed $legacy"
+  fi
+  install -Dm755 "$ROOT/share/omarchy-show-logo" "$OVERRIDE_BIN"
+  mkdir -p "$(dirname "$USER_ENV_FILE")"
+  sed "s|@OVERRIDE_DIR@|$(dirname "$OVERRIDE_BIN")|g" "$ROOT/share/uwsm-env.in" >"$USER_ENV_FILE"
+}
+
+# Removes per-user files a checkout installed, including ones from older
+# versions (50-omarchy-user-bin). Only files marked as ours go; the marker is
+# "omarchy-aum", which also matches files from before the rename to omarchy-aum-logo.
+remove_checkout_files() {
+  local file
+  for file in "$HOME/.config/omarchy/bin/omarchy-show-logo" "$USER_ENV_FILE" \
+    "$HOME/.config/uwsm/env.d/50-omarchy-user-bin"; do
+    if grep -qs omarchy-aum "$file"; then
+      rm -f "$file"
+      echo "Removed $file"
+    fi
+  done
+  rmdir "$HOME/.config/omarchy/bin" "$HOME/.config/uwsm/env.d" "$HOME/.config/uwsm" 2>/dev/null || true
+}
+
+cmd_set() {
+  local logo=${1:-} skip_login=${2:-false} logo_path bg text
+  [[ -n $logo ]] || die "which logo? use one of: $(logo_names | paste -sd' ')"
+  require_omarchy
+  logo_path=$(logo_file "$logo") || exit 1
+
+  echo "Using logo \"$logo\" ($logo_path)"
+
+  echo "Installing the screensaver text to $BRANDING_DIR/screensaver.txt"
+  if [[ -f $BRANDING_DIR/screensaver.txt ]] && ! cmp -s "$logo_path" "$BRANDING_DIR/screensaver.txt"; then
+    backup="$BRANDING_DIR/screensaver.txt.bak.$(date +%s)"
+    cp "$BRANDING_DIR/screensaver.txt" "$backup"
+    echo "  saved the previous text to $backup"
+  fi
+  install -Dm644 "$logo_path" "$BRANDING_DIR/screensaver.txt"
+
+  install_terminal_override
+
+  # Remember a logo name as a name, anything else as an absolute path.
+  mkdir -p "$CONFIG_DIR"
+  if [[ $logo == */* ]]; then echo "$logo_path"; else echo "$logo"; fi >"$SETTING_FILE"
+
+  echo "Rendering the login logo to $CACHE_DIR/login.png"
+  "$ROOT/lib/render-logo" "$logo_path" "$CACHE_DIR/login.png"
+
+  local login_pending=false
+  if same_logo "$CACHE_DIR/login.png" "$PLYMOUTH_THEME/logo.png" &&
+    same_logo "$CACHE_DIR/login.png" "$SDDM_THEME/logo.png"; then
+    echo "  the login screens already show this logo"
+  elif $skip_login; then
+    login_pending=true
+    echo "  skipped installing it (--skip-login)"
+  else
+    read -r bg text < <(login_colors)
+    echo "Installing the login logo (background $bg, text $text); this asks for your sudo password"
+    echo "and rebuilds the initramfs"
+    omarchy plymouth set "$bg" "$text" "$CACHE_DIR/login.png"
+  fi
+
+  echo
+  echo "Done."
+  echo "- Screensaver: preview it with: omarchy launch screensaver force"
+  if $login_pending; then
+    echo "- Login screens: not installed yet; run: $CMD set $logo"
+  else
+    echo "- Login screens: the new logo shows on the next boot"
+  fi
+  if [[ $(PATH=$(session_path) command -v omarchy-show-logo) == "$OVERRIDE_BIN" ]]; then
+    echo "- Floating terminal: uses the new logo"
+  else
+    echo "- Floating terminal: log out and back in (or reboot) once to use the new logo"
+  fi
+}
+
+cmd_reset() {
+  local skip_login=${1:-false} logo logo_path
+  logo=$(active_logo)
+  logo=${logo:-$DEFAULT_LOGO}
+
+  remove_checkout_files
+
+  if logo_path=$(logo_file "$logo" 2>/dev/null) && cmp -s "$logo_path" "$BRANDING_DIR/screensaver.txt"; then
+    cp "${OMARCHY_PATH:-/usr/share/omarchy}/logo.txt" "$BRANDING_DIR/screensaver.txt"
+    echo "Reset $BRANDING_DIR/screensaver.txt to the stock logo"
+  else
+    echo "Left $BRANDING_DIR/screensaver.txt alone: it isn't the \"$logo\" logo"
+  fi
+
+  rendered=$(mktemp --suffix=.png)
+  trap 'rm -f "$rendered"' EXIT
+  if [[ -z ${logo_path:-} ]] || ! "$ROOT/lib/render-logo" "$logo_path" "$rendered"; then
+    echo "Left the login screens alone: can't render the \"$logo\" logo to compare"
+  elif $skip_login; then
+    echo "Left the login screens alone (--skip-login)"
+  elif same_logo "$rendered" "$PLYMOUTH_THEME/logo.png" || same_logo "$rendered" "$SDDM_THEME/logo.png"; then
+    echo "Resetting the Plymouth and SDDM themes to stock; this asks for your sudo password"
+    echo "and rebuilds the initramfs"
+    omarchy plymouth reset
+  else
+    echo "Left the login screens alone: they don't show this logo"
+  fi
+
+  rm -f "$SETTING_FILE" "$CACHE_DIR/login.png"
+  rmdir "$CACHE_DIR" 2>/dev/null || true
+
+  echo
+  echo "Done. The floating terminal shows the stock logo again. Style > Logo stays in the"
+  echo "Omarchy menu so you can pick a logo later; \`$CMD unsetup\` removes it."
+  if ls "$BRANDING_DIR"/screensaver.txt.bak.* >/dev/null 2>&1; then
+    echo "Screensaver texts saved by omarchy-aum-logo are in $BRANDING_DIR/screensaver.txt.bak.*"
+  fi
+}
+
+cmd_edit() {
+  local custom="$USER_LOGOS_DIR/custom.txt" seed
+  if [[ ! -s $custom ]]; then
+    seed=$(active_logo)
+    seed=$(logo_file "${seed:-$DEFAULT_LOGO}") || exit 1
+    install -Dm644 "$seed" "$custom"
+  fi
+  exec omarchy-launch-editor "$custom"
+}
+
+cmd_preview() {
+  local logo=${1:-} src out_dir bg text
+  logo=${logo:-$(active_logo)}
+  src=$(logo_file "${logo:-$DEFAULT_LOGO}") || exit 1
+
+  if [[ -t 1 ]]; then
+    echo -e "\033[32m"
+    cat <"$src"
+    echo -e "\033[0m"
+  fi
+
+  out_dir="${XDG_RUNTIME_DIR:-/tmp}/omarchy-aum-logo"
+  mkdir -p "$out_dir"
+  "$ROOT/lib/render-logo" "$src" "$out_dir/login.png"
+  read -r bg text < <(login_colors)
+  omarchy plymouth preview "$bg" "$text" "$out_dir/login.png" "$out_dir/unlock-preview.png" >/dev/null
+  echo "Unlock screen preview: $out_dir/unlock-preview.png"
+  setsid -f xdg-open "$out_dir/unlock-preview.png" >/dev/null 2>&1 || true
+}
+
+cmd_status() {
+  local logo logo_path resolved theme bg text file
+  ok() { printf '  \e[32mok\e[0m    %s\n' "$*"; }
+  bad() { printf '  \e[31mFAIL\e[0m  %s\n' "$*"; }
+  note() { printf '  ..    %s\n' "$*"; }
+  todo() { printf '  \e[33mtodo\e[0m  %s\n' "$*"; }
+
+  logo=$(active_logo)
+  if [[ -z $logo ]]; then
+    echo "No logo picked yet; Omarchy shows its stock logo. Pick one with: $CMD set <logo>"
+    echo "Logos: $(logo_names | paste -sd' ')"
+  else
+    logo_path=$(logo_file "$logo") || exit 1
+    echo "Logo \"$logo\" ($logo_path)"
+    rendered=$(mktemp --suffix=.png)
+    trap 'rm -f "$rendered"' EXIT
+    "$ROOT/lib/render-logo" "$logo_path" "$rendered" || exit 1
+
+    echo "Screensaver"
+    if cmp -s "$logo_path" "$BRANDING_DIR/screensaver.txt"; then
+      ok "$BRANDING_DIR/screensaver.txt matches the logo"
+    else
+      bad "$BRANDING_DIR/screensaver.txt differs from the logo: $CMD set $logo"
+    fi
+
+    echo "Login screens"
+    for file in "$PLYMOUTH_THEME/logo.png" "$SDDM_THEME/logo.png"; do
+      if same_logo "$rendered" "$file"; then
+        ok "$file shows the logo"
+      else
+        bad "$file shows a different logo: $CMD set $logo"
+      fi
+    done
+    theme=$(plymouth-set-default-theme 2>/dev/null)
+    if [[ $theme == omarchy ]]; then
+      ok "Plymouth theme is omarchy"
+    else
+      bad "Plymouth theme is ${theme:-unknown}, so the boot screen doesn't use this logo: omarchy plymouth reset"
+    fi
+    read -r bg text < <(login_colors)
+    note "colors: background $bg, text $text"
+    note "the boot screen reads a copy inside the initramfs, which set rebuilds; /boot isn't readable without sudo"
+    if grep -qs '^User=' /etc/sddm.conf.d/*.conf; then
+      note "SDDM autologin is on, so you mostly see the logo on the disk unlock screen"
+    fi
+
+    echo "Floating terminal"
+    resolved=$(PATH=$(session_path) command -v omarchy-show-logo)
+    if [[ $resolved == "$OVERRIDE_BIN" ]]; then
+      ok "the running session uses $OVERRIDE_BIN"
+    elif [[ -x $OVERRIDE_BIN ]]; then
+      todo "the running session still uses ${resolved:-nothing}: log out and back in once"
+    else
+      bad "$OVERRIDE_BIN is missing: $CMD set $logo"
+    fi
+  fi
+
+  echo "Omarchy menu"
+  if grep -qF "$MENU_BEGIN" "$MENU_FILE" 2>/dev/null; then
+    ok "Style > Logo is in $MENU_FILE"
+  else
+    todo "Style > Logo isn't in the menu yet: $CMD setup"
+  fi
+  note "installed as $($PACKAGED && echo "the omarchy-aum-logo package" || echo "a checkout in $ROOT")"
+}
+
+cmd_list() {
+  local active name
+  active=$(active_logo)
+  while read -r name; do
+    printf '%s %-10s %s\n' "$([[ $name == "$active" ]] && echo '*' || echo ' ')" "$name" "$(logo_file "$name")"
+  done < <(logo_names)
+}
+
+cmd_setup() {
+  local quiet=${1:-false} tmp
+  [[ $CMD != *[\"\'\\]* ]] || die "can't add menu entries for a path with quotes: $CMD"
+  mkdir -p "$(dirname "$MENU_FILE")"
+  [[ -s $MENU_FILE ]] || printf '{\n}\n' >"$MENU_FILE"
+
+  tmp=$(mktemp)
+  strip_menu_block "$MENU_FILE" >"$tmp"
+  # Insert right after the opening brace. Every entry ends with a comma, which
+  # is valid before other entries and dropped by the menu parser before "}".
+  if ! grep -qE '^[[:space:]]*\{[[:space:]]*$' "$tmp"; then
+    rm -f "$tmp"
+    die "$MENU_FILE has no line with just \"{\" to add the entries after; add them by hand from $ROOT/share/menu.jsonc"
+  fi
+  awk -v block="$(sed "s|@CMD@|$CMD|g" "$ROOT/share/menu.jsonc" | sed 's/^/  /')" \
+    '!done && /^[[:space:]]*\{[[:space:]]*$/ { print; print block; done = 1; next } { print }' "$tmp" >"$tmp.new"
+  rm -f "$tmp"
+  menu_jsonc_valid "$tmp.new" || { rm -f "$tmp.new"; die "adding the entries would break $MENU_FILE; it is unchanged"; }
+
+  if cmp -s "$tmp.new" "$MENU_FILE"; then
+    rm -f "$tmp.new"
+    $quiet || echo "Style > Logo is already in $MENU_FILE"
+    return
+  fi
+  cp "$MENU_FILE" "$MENU_FILE.bak.omarchy-aum-logo"
+  cat "$tmp.new" >"$MENU_FILE"
+  rm -f "$tmp.new"
+  omarchy-menu refresh >/dev/null 2>&1 || true
+  echo "Added Style > Logo to $MENU_FILE (backup: $MENU_FILE.bak.omarchy-aum-logo)"
+}
+
+cmd_unsetup() {
+  local tmp
+  if ! grep -qF "$MENU_BEGIN" "$MENU_FILE" 2>/dev/null; then
+    echo "Style > Logo isn't in $MENU_FILE"
+    return
+  fi
+  tmp=$(mktemp)
+  strip_menu_block "$MENU_FILE" >"$tmp"
+  menu_jsonc_valid "$tmp" || { rm -f "$tmp"; die "removing the entries would break $MENU_FILE; it is unchanged"; }
+  cat "$tmp" >"$MENU_FILE"
+  rm -f "$tmp"
+  omarchy-menu refresh >/dev/null 2>&1 || true
+  echo "Removed Style > Logo from $MENU_FILE"
+}
+
+# Prints a menu file without omarchy-aum-logo's marked block (matched with or
+# without indentation).
+strip_menu_block() {
+  awk -v b="$MENU_BEGIN" -v e="$MENU_END" '
+    { line = $0; sub(/^[[:space:]]+/, "", line) }
+    line == b { skip = 1 }
+    !skip { print }
+    line == e { skip = 0 }
+  ' "$1"
+}
+
+cmd_menu() {
+  cmd_setup true
+  exec omarchy-menu summon style.logo
+}
+
+# Split --skip-login off the other arguments.
+skip_login=false
+args=()
+for arg in "$@"; do
+  case $arg in
+  --skip-login) skip_login=true ;;
+  *) args+=("$arg") ;;
+  esac
+done
+set -- "${args[@]}"
+
+case "${1:-}" in
+menu) cmd_menu ;;
+set) cmd_set "${2:-}" "$skip_login" ;;
+reset) cmd_reset "$skip_login" ;;
+edit) cmd_edit ;;
+preview) cmd_preview "${2:-}" ;;
+status) cmd_status ;;
+list) cmd_list ;;
+current) active_logo || exit 1 ;;
+is-active) [[ -n ${2:-} && $(active_logo) == "$2" ]] ;;
+has) [[ -n ${2:-} ]] && logo_file "$2" >/dev/null 2>&1 ;;
+setup) cmd_setup ;;
+unsetup) cmd_unsetup ;;
+-h | --help | help | "") usage ;;
+*)
+  usage >&2
+  exit 1
+  ;;
+esac

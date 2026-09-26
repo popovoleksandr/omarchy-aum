@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+"""Draws the app icon (share/omarchy-aum-logo.svg) from the symbol at the start of
+logos/aum.txt: every block character becomes square pixels, on a dark tile.
+
+Usage: tools/make-icon [logo.txt] [out.svg]
+"""
+import os
+import sys
+
+src = sys.argv[1] if len(sys.argv) > 1 else "logos/aum.txt"
+out = sys.argv[2] if len(sys.argv) > 2 else "share/omarchy-aum-logo.svg"
+BG, FG = "#1a1b26", "#a8cd76"
+
+lines = open(src, encoding="utf-8").read().rstrip("\n").split("\n")
+width = max(len(line) for line in lines)
+lines = [line.ljust(width) for line in lines]
+
+# "archy" is the stock logo from the "a" on (column 27), so find where the
+# stock letters' top line starts in this logo; the symbol is everything before.
+stock = open(os.environ.get("OMARCHY_PATH", "/usr/share/omarchy") + "/logo.txt", encoding="utf-8").read().split("\n")
+archy_top = stock[1][27:].rstrip()
+start = next(len(line.rstrip()) - len(archy_top) for line in lines if line.rstrip().endswith(archy_top))
+end = max(c for c in range(start) if any(line[c] != " " for line in lines)) + 1
+
+# Each character is two pixels tall: top half and bottom half.
+pixels = []
+for line in lines:
+    top, bottom = [], []
+    for ch in line[:end]:
+        top.append(ch in "█▀")
+        bottom.append(ch in "█▄")
+    pixels += [top, bottom]
+while not any(pixels[0]):
+    pixels.pop(0)
+while not any(pixels[-1]):
+    pixels.pop()
+
+w, h = end, len(pixels)
+size = max(w, h) + 8
+ox, oy = (size - w) / 2, (size - h) / 2
+# One path for all runs of pixels, so rows join without seams when scaled.
+runs = []
+for y, row in enumerate(pixels):
+    x = 0
+    while x < w:
+        if row[x]:
+            start = x
+            while x < w and row[x]:
+                x += 1
+            runs.append(f"M{ox + start:g} {oy + y:g}h{x - start}v1h-{x - start}z")
+        else:
+            x += 1
+
+svg = (
+    f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {size} {size}">\n'
+    f'<rect width="{size}" height="{size}" rx="{size * 0.18:g}" fill="{BG}"/>\n'
+    f'<path fill="{FG}" d="{"".join(runs)}"/>\n</svg>\n'
+)
+open(out, "w", encoding="utf-8").write(svg)
+print(f"{out}: {w}x{h} pixels on a {size}x{size} tile")

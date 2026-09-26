@@ -1,8 +1,0 @@
-# omarchy-aum: changes require a restart to take effect.
-
-# Let user overrides of Omarchy commands in ~/.config/omarchy/bin win over the
-# packaged ones in /usr/bin (e.g. omarchy-show-logo with the custom logo).
-case ":$PATH:" in
-  *":$HOME/.config/omarchy/bin:"*) ;;
-  *) export PATH="$HOME/.config/omarchy/bin:$PATH" ;;
-esac

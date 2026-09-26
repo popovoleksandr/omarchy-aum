@@ -1,0 +1,9 @@
+# omarchy-aum-logo: changes require a restart to take effect.
+
+# Put the omarchy-aum-logo override of omarchy-show-logo (the floating Omarchy
+# terminal's logo) ahead of Omarchy's own. It runs Omarchy's own unless you've
+# picked a logo with omarchy-aum-logo.
+case ":$PATH:" in
+  *":@OVERRIDE_DIR@:"*) ;;
+  *) export PATH="@OVERRIDE_DIR@:$PATH" ;;
+esac

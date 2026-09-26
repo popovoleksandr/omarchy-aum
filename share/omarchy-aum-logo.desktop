@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Omarchy Logo
+GenericName=Logo Settings
+Comment=Pick the logo on the screensaver, boot and login screens, and Omarchy terminal
+Exec=omarchy-aum-logo menu
+Icon=omarchy-aum-logo
+Terminal=false
+Categories=Settings;DesktopSettings;
+Keywords=omarchy;logo;aum;om;ॐ;branding;screensaver;plymouth;sddm;unlock;

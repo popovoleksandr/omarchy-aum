@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Installs a custom Omarchy logo for the current user: the screensaver text,
-# the floating Omarchy terminal logo, and the Plymouth/SDDM login logo.
-# Safe to re-run after editing a logo.
+# Installs a logo straight from this checkout, without the package: the
+# screensaver text, the floating terminal logo, the login screens, and
+# Style > Logo in the Omarchy menu. Safe to re-run after editing a logo.
 #
 # Usage: [LOGO=<name|file>] ./install.sh [--skip-login]
 #   --skip-login  don't install the login logo (the only step that needs sudo)
@@ -12,74 +12,6 @@ set -euo pipefail
 # a dot below the "m") or a path to your own .txt file.
 LOGO=${LOGO:-aum}
 
-source "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
-
-skip_login=false
-case "${1:-}" in
-"") ;;
---skip-login) skip_login=true ;;
-*)
-  echo "Usage: [LOGO=<name|file>] ./install.sh [--skip-login]" >&2
-  exit 1
-  ;;
-esac
-
-command -v omarchy >/dev/null || die "omarchy is missing; this is meant for Omarchy"
-command -v magick >/dev/null || die "magick is missing (package: imagemagick)"
-[[ -d $PLYMOUTH_THEME && -d $SDDM_THEME ]] ||
-  die "the Omarchy Plymouth/SDDM themes are missing ($PLYMOUTH_THEME, $SDDM_THEME)"
-logo_path=$(logo_file "$LOGO") || exit 1
-
-echo "Installing logo \"$LOGO\" ($logo_path)"
-
-echo "Installing the screensaver text to $BRANDING_DIR/screensaver.txt"
-if [[ -f $BRANDING_DIR/screensaver.txt ]] && ! cmp -s "$logo_path" "$BRANDING_DIR/screensaver.txt"; then
-  backup="$BRANDING_DIR/screensaver.txt.bak.$(date +%s)"
-  cp "$BRANDING_DIR/screensaver.txt" "$backup"
-  echo "  saved the previous text to $backup"
-fi
-install -Dm644 "$logo_path" "$BRANDING_DIR/screensaver.txt"
-
-echo "Installing the floating terminal logo to $USER_BIN_DIR/omarchy-show-logo"
-install -Dm755 "$ROOT/bin/omarchy-show-logo" "$USER_BIN_DIR/omarchy-show-logo"
-install -Dm644 "$ROOT/share/$UWSM_ENV_FILE" "$UWSM_ENV_DIR/$UWSM_ENV_FILE"
-
-echo "Rendering the login logo to $BRANDING_DIR/login.png"
-"$ROOT/bin/omarchy-aum-render-logo" "$logo_path" "$BRANDING_DIR/login.png"
-
-# Remember a logos/ name as a name, anything else as an absolute path.
-mkdir -p "$(dirname "$STATE_FILE")"
-if [[ $logo_path == "$ROOT/logos/$LOGO.txt" ]]; then
-  echo "$LOGO" >"$STATE_FILE"
-else
-  echo "$logo_path" >"$STATE_FILE"
-fi
-
-login_pending=false
-if same_logo "$BRANDING_DIR/login.png" "$PLYMOUTH_THEME/logo.png" &&
-  same_logo "$BRANDING_DIR/login.png" "$SDDM_THEME/logo.png"; then
-  echo "  the login screens already show this logo"
-elif $skip_login; then
-  login_pending=true
-  echo "  skipped installing it (--skip-login)"
-else
-  read -r bg text < <(login_colors)
-  echo "Installing the login logo (background $bg, text $text); this asks for your sudo password"
-  echo "and rebuilds the initramfs"
-  omarchy plymouth set "$bg" "$text" "$BRANDING_DIR/login.png"
-fi
-
-echo
-echo "Done."
-echo "- Screensaver: preview it with: omarchy launch screensaver force"
-if $login_pending; then
-  echo "- Login screens: not installed yet; run ./install.sh again without --skip-login"
-else
-  echo "- Login screens: the new logo shows on the next boot"
-fi
-if [[ $(PATH=$(session_path) command -v omarchy-show-logo) == "$USER_BIN_DIR/omarchy-show-logo" ]]; then
-  echo "- Floating terminal: already uses the new logo"
-else
-  echo "- Floating terminal: log out and back in (or reboot) once to use the new logo"
-fi
-echo "Check everything with: $ROOT/status.sh"
+bin="$(dirname "${BASH_SOURCE[0]}")/bin/omarchy-aum-logo"
+"$bin" set "$LOGO" "$@"
+"$bin" setup

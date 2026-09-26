@@ -1,0 +1,22 @@
+post_install() {
+  cat <<'MSG'
+==> omarchy-aum-logo: open "Omarchy Logo" from the app launcher (or run: omarchy-aum-logo menu).
+    The first run adds Style > Logo to the Omarchy menu, where you pick a logo.
+    Log out and back in once so the floating Omarchy terminal can show it.
+MSG
+}
+
+post_upgrade() {
+  # Refresh the Style > Logo entries in case they changed.
+  cat <<'MSG'
+==> omarchy-aum-logo: run "omarchy-aum-logo setup" to refresh Style > Logo in the Omarchy menu.
+MSG
+}
+
+pre_remove() {
+  cat <<'MSG'
+==> omarchy-aum-logo: pacman can't undo per-user changes. Before removing, run
+    "omarchy-aum-logo reset" (stock logo back) and "omarchy-aum-logo unsetup" (menu entry).
+    If it's already gone: omarchy plymouth reset; omarchy branding screensaver reset
+MSG
+}

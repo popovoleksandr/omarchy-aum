@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# omarchy-aum-logo: override of omarchy-show-logo, which the floating Omarchy
+# terminal runs before a command. When you've picked a logo with omarchy-aum-logo,
+# it shows that logo (the screensaver text); otherwise it runs Omarchy's own.
+
+logo=~/.config/omarchy/branding/screensaver.txt
+setting=${XDG_CONFIG_HOME:-$HOME/.config}/omarchy-aum-logo/logo
+
+if [[ ! -s $setting || ! -s $logo ]]; then
+  exec "${OMARCHY_PATH:-/usr/share/omarchy}/bin/omarchy-show-logo" "$@"
+fi
+
+clear
+echo -e "\033[32m"
+cat <"$logo"
+echo -e "\033[0m"
+echo

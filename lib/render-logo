@@ -2,7 +2,7 @@
 # Renders a block-character ASCII logo (█ ▀ ▄) into the PNG used by the Plymouth
 # unlock screen and the SDDM login screen.
 #
-# Usage: omarchy-aum-render-logo <logo.txt> <output.png>
+# Usage: render-logo <logo.txt> <output.png>
 #
 # Omarchy's stock logo.png is its logo.txt drawn at 10 px per column and per
 # half-row (81x19 half-cells) and then resized to 800x188. Rendering the same
@@ -11,7 +11,7 @@
 set -euo pipefail
 
 if (($# != 2)); then
-  echo "Usage: omarchy-aum-render-logo <logo.txt> <output.png>" >&2
+  echo "Usage: render-logo <logo.txt> <output.png>" >&2
   exit 1
 fi
 

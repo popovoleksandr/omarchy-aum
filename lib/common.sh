@@ -1,18 +1,35 @@
-# Shared paths and helpers for install.sh, status.sh, uninstall.sh and preview.sh.
+# Shared paths and helpers for omarchy-aum-logo.
 # shellcheck shell=bash
+#
+# The caller sets ROOT: the directory holding bin/, lib/ and logos/. That is the
+# git checkout, or /usr/share/omarchy-aum-logo when installed as a package.
 
-ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy-aum-logo"
+SETTING_FILE="$CONFIG_DIR/logo"
+USER_LOGOS_DIR="$CONFIG_DIR/logos"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/omarchy-aum-logo"
 BRANDING_DIR="$HOME/.config/omarchy/branding"
-USER_BIN_DIR="$HOME/.config/omarchy/bin"
-UWSM_ENV_DIR="$HOME/.config/uwsm/env.d"
-UWSM_ENV_FILE=50-omarchy-user-bin
+MENU_FILE="$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"
 PLYMOUTH_THEME=/usr/share/plymouth/themes/omarchy
 SDDM_THEME=/usr/share/sddm/themes/omarchy
 STOCK_BG="#1a1b26"
 STOCK_TEXT="#c0caf5"
 DEFAULT_LOGO=aum
-# Remembers which logo install.sh installed, for status.sh and uninstall.sh.
-STATE_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy-aum/logo"
+MENU_BEGIN="// >>> omarchy-aum-logo >>>"
+MENU_END="// <<< omarchy-aum-logo <<<"
+
+# The package ships the floating-terminal override and the uwsm env file that
+# puts it first on PATH system-wide. A checkout installs both per user instead.
+if [[ -x $ROOT/override/omarchy-show-logo ]]; then
+  PACKAGED=true
+  OVERRIDE_BIN="$ROOT/override/omarchy-show-logo"
+  CMD=omarchy-aum-logo
+else
+  PACKAGED=false
+  OVERRIDE_BIN="$HOME/.config/omarchy/bin/omarchy-show-logo"
+  CMD="$ROOT/bin/omarchy-aum-logo"
+fi
+USER_ENV_FILE="$HOME/.config/uwsm/env.d/50-omarchy-aum-logo"
 
 warn() {
   echo "warning: $*" >&2
@@ -23,24 +40,34 @@ die() {
   exit 1
 }
 
-# Path of a logo given by name (logos/<name>.txt) or as a path to a .txt file.
+# Names of all logos: your own in ~/.config/omarchy-aum-logo/logos first, then the
+# bundled ones. A name in both places means your own file.
+logo_names() {
+  local dir file
+  for dir in "$USER_LOGOS_DIR" "$ROOT/logos"; do
+    for file in "$dir"/*.txt; do
+      [[ -f $file ]] && basename "$file" .txt
+    done
+  done | awk '!seen[$0]++'
+}
+
+# Path of a logo given by name or as a path to a .txt file.
 logo_file() {
-  local logo=$1 names
-  if [[ $logo != */* && -f $ROOT/logos/$logo.txt ]]; then
+  local logo=$1
+  if [[ $logo != */* && -f $USER_LOGOS_DIR/$logo.txt ]]; then
+    echo "$USER_LOGOS_DIR/$logo.txt"
+  elif [[ $logo != */* && -f $ROOT/logos/$logo.txt ]]; then
     echo "$ROOT/logos/$logo.txt"
-  elif [[ -f $logo ]]; then
+  elif [[ $logo == */* && -f $logo ]]; then
     realpath -- "$logo"
   else
-    names=$(cd "$ROOT/logos" && ls -- *.txt | sed 's/\.txt$//' | paste -sd, | sed 's/,/, /g')
-    die "no logo \"$logo\": use a name from logos/ ($names) or a path to a .txt file"
+    die "no logo \"$logo\": use one of $(logo_names | paste -sd, | sed 's/,/, /g'), or a path to a .txt file"
   fi
 }
 
-# The logo install.sh installed last, or the default if it never ran.
-installed_logo() {
-  local logo
-  logo=$(cat "$STATE_FILE" 2>/dev/null)
-  echo "${logo:-$DEFAULT_LOGO}"
+# The logo chosen with `omarchy-aum-logo set`, if any.
+active_logo() {
+  cat "$SETTING_FILE" 2>/dev/null
 }
 
 # True if two logo PNGs show the same picture. Renders from different
@@ -73,4 +100,10 @@ login_colors() {
   bg=$(grep -m1 -oE 'color: "#[0-9a-fA-F]{6}"' "$SDDM_THEME/Main.qml" 2>/dev/null | grep -oE '#[0-9a-fA-F]{6}')
   text=$(magick "$SDDM_THEME/lock.png" -format %c histogram:info:- 2>/dev/null | sort -rn | grep -m1 -oE '#[0-9A-F]{6}FF\b' | cut -c1-7 | tr A-F a-f)
   echo "${LOGIN_BG:-${bg:-$STOCK_BG}} ${LOGIN_TEXT:-${text:-$STOCK_TEXT}}"
+}
+
+# True if a JSONC file parses the way the Omarchy menu reads it: full-line //
+# comments and trailing commas are dropped, the rest must be a JSON object.
+menu_jsonc_valid() {
+  sed -E '/^[[:space:]]*\/\//d' "$1" | sed -zE 's/,([[:space:]]*[]}])/\1/g' | jq -e 'type == "object"' >/dev/null 2>&1
 }

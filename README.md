@@ -44,7 +44,7 @@ omarchy pkg aur add omarchy-aum-logo     # or: yay -S omarchy-aum-logo
 
 Then:
 
-1. Open **Omarchy Logo** from the app launcher (it has an ॐ icon). The first time, it adds **Style > Logo** to the Omarchy menu and opens it.
+1. Open **Omarchy Aum Logo** from the app launcher (it has an ॐ icon). The first time, it adds **Style > Logo** to the Omarchy menu and opens it.
 2. Pick **ॐarchy** or **oṃarchy**. A floating terminal asks for your sudo password once, to put the logo on the boot and login screens, and rebuilds the initramfs.
 3. **Log out and back in** once after installing the package, so the floating Omarchy terminal can show the logo. **Reboot** to see it on the boot/unlock screen.
 

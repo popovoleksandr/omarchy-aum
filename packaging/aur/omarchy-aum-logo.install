@@ -1,6 +1,6 @@
 post_install() {
   cat <<'MSG'
-==> omarchy-aum-logo: open "Omarchy Logo" from the app launcher (or run: omarchy-aum-logo menu).
+==> omarchy-aum-logo: open "Omarchy Aum Logo" from the app launcher (or run: omarchy-aum-logo menu).
     The first run adds Style > Logo to the Omarchy menu, where you pick a logo.
     Log out and back in once so the floating Omarchy terminal can show it.
 MSG

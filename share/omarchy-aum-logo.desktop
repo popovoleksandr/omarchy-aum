@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=Omarchy Logo
+Name=Omarchy Aum Logo
 GenericName=Logo Settings
 Comment=Pick the logo on the screensaver, boot and login screens, and Omarchy terminal
 Exec=omarchy-aum-logo menu

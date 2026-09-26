@@ -19,14 +19,14 @@ The AUR package builds from a tagged GitHub release: `PKGBUILD` downloads `v<ver
 
 ## Releasing a version
 
-1. Commit, then tag and push the release, for example `0.1.0`:
+1. Commit, then tag and push the release, for example `1.0.0`:
    ```sh
-   git tag -a v0.1.0 -m "omarchy-aum-logo 0.1.0"
-   git push origin master v0.1.0
+   git tag -a v1.0.0 -m "omarchy-aum-logo 1.0.0"
+   git push origin master v1.0.0
    ```
 2. Fill in the checksum and `.SRCINFO`, and test-build from the GitHub tarball:
    ```sh
-   packaging/aur/update.sh 0.1.0
+   packaging/aur/update.sh 1.0.0
    ```
 3. Commit the updated `PKGBUILD` and `.SRCINFO` in this repository.
 4. Publish to the AUR:

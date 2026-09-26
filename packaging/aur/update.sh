@@ -3,7 +3,7 @@
 # sets pkgver, resets pkgrel, fills in the tarball checksum, regenerates
 # .SRCINFO, and test-builds the package from the GitHub tarball.
 #
-# Usage: packaging/aur/update.sh <version>     (e.g. 0.1.0 for tag v0.1.0)
+# Usage: packaging/aur/update.sh <version>     (e.g. 1.0.0 for tag v1.0.0)
 
 set -euo pipefail
 

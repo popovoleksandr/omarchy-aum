@@ -65,9 +65,10 @@ logo_file() {
   fi
 }
 
-# The logo chosen with `omarchy-aum-logo set`, if any.
+# The logo chosen with `omarchy-aum-logo set`, or nothing. Always succeeds, so
+# `x=$(active_logo)` is safe under set -e before any logo is picked.
 active_logo() {
-  cat "$SETTING_FILE" 2>/dev/null
+  cat "$SETTING_FILE" 2>/dev/null || true
 }
 
 # True if two logo PNGs show the same picture. Renders from different

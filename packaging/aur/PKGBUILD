@@ -1,6 +1,6 @@
 # Maintainer: Oleksandr Popov <anantaramdas@outlook.com>
 pkgname=omarchy-aum-logo
-pkgver=0.1.0
+pkgver=1.0.0
 pkgrel=1
 pkgdesc="Custom Omarchy logo (ॐarchy, oṃarchy or your own) for the screensaver, boot/login screens and Omarchy terminal"
 arch=(any)

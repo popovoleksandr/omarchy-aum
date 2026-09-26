@@ -225,7 +225,7 @@ cmd_status() {
         bad "$file shows a different logo: $CMD set $logo"
       fi
     done
-    theme=$(plymouth-set-default-theme 2>/dev/null)
+    theme=$(plymouth-set-default-theme 2>/dev/null) || true
     if [[ $theme == omarchy ]]; then
       ok "Plymouth theme is omarchy"
     else
@@ -239,7 +239,7 @@ cmd_status() {
     fi
 
     echo "Floating terminal"
-    resolved=$(PATH=$(session_path) command -v omarchy-show-logo)
+    resolved=$(PATH=$(session_path) command -v omarchy-show-logo) || true
     if [[ $resolved == "$OVERRIDE_BIN" ]]; then
       ok "the running session uses $OVERRIDE_BIN"
     elif [[ -x $OVERRIDE_BIN ]]; then
@@ -347,7 +347,7 @@ edit) cmd_edit ;;
 preview) cmd_preview "${2:-}" ;;
 status) cmd_status ;;
 list) cmd_list ;;
-current) active_logo || exit 1 ;;
+current) [[ -n $(active_logo) ]] && active_logo || exit 1 ;;
 is-active) [[ -n ${2:-} && $(active_logo) == "$2" ]] ;;
 has) [[ -n ${2:-} ]] && logo_file "$2" >/dev/null 2>&1 ;;
 setup) cmd_setup ;;
